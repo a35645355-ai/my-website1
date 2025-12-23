@@ -1,0 +1,280 @@
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>感情指定型テロップレコメンドシステム（UX改善版）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google Fonts（HTTPS） -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+
+  <!-- HTTPS サイト向けセキュリティ -->
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #4338ca;
+      --gray: #6b7280;
+      --bg: #f8fafc;
+    }
+
+    body {
+      font-family: "Noto Sans JP", sans-serif;
+      background: linear-gradient(135deg, #eef2ff, #f8fafc);
+      margin: 0;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 880px;
+      margin: auto;
+      background: #fff;
+      padding: 36px 32px 40px;
+      border-radius: 20px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--gray);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .progress {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 30px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #c7d2fe;
+    }
+
+    .dot.active {
+      background: var(--primary);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 18px;
+      margin: 26px 0;
+    }
+
+    button {
+      padding: 18px 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      background: var(--primary);
+      color: white;
+      transition: transform .12s, box-shadow .12s, background .2s;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+    }
+
+    button:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.18);
+    }
+
+    button.secondary {
+      background: #9ca3af;
+    }
+
+    button.secondary:hover {
+      background: var(--gray);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .card {
+      background: #eef2ff;
+      border-radius: 18px;
+      padding: 24px;
+      animation: fade .3s ease;
+    }
+
+    .sample {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .sample img {
+      max-width: 100%;
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    }
+
+    .reason {
+      margin-top: 12px;
+      line-height: 1.7;
+    }
+
+    .nav {
+      margin-top: 26px;
+      text-align: center;
+    }
+
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+  <h1>テロップ感情レコメンド</h1>
+  <div class="subtitle">感情 → 表現意図 → 最適フォントを提案</div>
+
+  <div class="progress">
+    <div class="dot active" id="p1"></div>
+    <div class="dot" id="p2"></div>
+    <div class="dot" id="p3"></div>
+  </div>
+
+  <!-- STEP 1 -->
+  <section id="step1">
+    <h2>① 表現したい感情を選択</h2>
+    <div class="buttons">
+      <button onclick="selectEmotion('喜')">喜</button>
+      <button onclick="selectEmotion('怒')">怒</button>
+      <button onclick="selectEmotion('哀')">哀</button>
+      <button onclick="selectEmotion('楽')">楽</button>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section id="step2" class="hidden">
+    <h2 id="step2Title">② 表現のニュアンスを選択</h2>
+    <div class="buttons" id="subButtons"></div>
+    <div class="nav">
+      <button class="secondary" onclick="backTo1()">← 戻る</button>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section id="step3" class="hidden card">
+    <h2 id="fontTitle"></h2>
+    <div class="reason" id="reason"></div>
+    <div class="sample">
+      <p>テロップ例（あいうえお）</p>
+      <img id="sampleImage" src="" alt="font sample">
+    </div>
+    <div class="nav">
+      <button class="secondary" onclick="backTo2()">← 戻る</button>
+    </div>
+  </section>
+</div>
+
+<script>
+  const map = {
+    "喜": {
+      "明るい": {
+        font: "トガリテ",
+        img: "https://yourdomain.com/images/トガリテ Black.png",
+        reason: "評価性・活動性が高く、快活な喜びを強調"
+      },
+      "穏やか": {
+        font: "M PLUS 1p",
+        img: "https://yourdomain.com/images/M PLUS 1p Black.png",
+        reason: "安心感と安定感のある喜びを表現"
+      }
+    },
+    "怒": {
+      "強い": {
+        font: "851チカラヅヨク",
+        img: "https://yourdomain.com/images/851チカラヅヨク.png",
+        reason: "力量性が高く、強い怒りと対応"
+      },
+      "冷静": {
+        font: "源界明朝",
+        img: "https://yourdomain.com/images/源界明朝.png",
+        reason: "抑制された緊張感のある怒りを表現"
+      }
+    },
+    "哀": {
+      "静か": {
+        font: "851チカラヅヨク",
+        img: "https://yourdomain.com/images/851チカラヅヨク.png",
+        reason: "静的で内省的な悲しみを表現"
+      },
+      "弱い": {
+        font: "昔々ふぉんと",
+        img: "https://yourdomain.com/images/昔々ふぉんと.png",
+        reason: "儚さ・弱さの因子が哀と一致"
+      }
+    },
+    "楽": {
+      "柔らか": {
+        font: "フィバ文字",
+        img: "https://yourdomain.com/images/フィバ文字.png",
+        reason: "親しみやすく柔らかな楽しさ"
+      },
+      "素朴": {
+        font: "うさぎとまんげつのサンセリフ",
+        img: "https://yourdomain.com/images/うさぎとまんげつのサンセリフ.png",
+        reason: "素朴で安心感のある楽しさ"
+      }
+    }
+  };
+
+  let emotion = "";
+
+  function selectEmotion(e) {
+    emotion = e;
+    changeStep(2);
+    document.getElementById("step2Title").innerText =
+      `② 「${e}」のニュアンスを選択`;
+
+    const area = document.getElementById("subButtons");
+    area.innerHTML = "";
+
+    Object.keys(map[e]).forEach(key => {
+      const btn = document.createElement("button");
+      btn.textContent = key;
+      btn.onclick = () => showResult(key);
+      area.appendChild(btn);
+    });
+  }
+
+  function showResult(key) {
+    const data = map[emotion][key];
+    changeStep(3);
+    document.getElementById("fontTitle").innerText =
+      `おすすめフォント：${data.font}`;
+    document.getElementById("reason").innerText = data.reason;
+    document.getElementById("sampleImage").src = data.img;
+  }
+
+  function changeStep(n) {
+    ["step1","step2","step3"].forEach((id,i) => {
+      document.getElementById(id).classList.toggle("hidden", i !== n-1);
+      document.getElementById("p"+(i+1)).classList.toggle("active", i < n);
+    });
+  }
+
+  function backTo1() { changeStep(1); }
+  function backTo2() { changeStep(2); }
+</script>
+</body>
+</html>
